@@ -1,0 +1,68 @@
+servicios/RecetaServicePrx.java
+ servicios.RecetaServicePrx
+servicios/_ServicioAbastecimientoPrxI.java
+ servicios._ServicioAbastecimientoPrxI
+servicios/_AlarmaServicePrxI.java
+ servicios._AlarmaServicePrxI
+bodega/BodegaService.java
+ bodega.BodegaService
+servicios/_ServicioComLogisticaPrxI.java
+ servicios._ServicioComLogisticaPrxI
+servicios/_VentaServicePrxI.java
+ servicios._VentaServicePrxI
+servicios/ServicioAbastecimientoPrx.java
+ servicios.ServicioAbastecimientoPrx
+servicios/ServicioBodegaPrx.java
+ servicios.ServicioBodegaPrx
+servicios/VentaService.java
+ servicios.VentaService
+ servicios.VentaService$1
+mantenimientoExistencias/Inventario.java
+ mantenimientoExistencias.Inventario
+servicios/_RecetaServicePrxI.java
+ servicios._RecetaServicePrxI
+servicios/Moneda.java
+ servicios.Moneda
+servicios/ServicioComLogistica.java
+ servicios.ServicioComLogistica
+ servicios.ServicioComLogistica$1
+bodega/ItemInventario.java
+ bodega.ItemInventario
+servicios/AlarmaServicePrx.java
+ servicios.AlarmaServicePrx
+BodegaCentral.java
+ BodegaCentral
+servicios/ServicioBodega.java
+ servicios.ServicioBodega
+ servicios.ServicioBodega$1
+servicios/RecetaService.java
+ servicios.RecetaService
+ servicios.RecetaService$1
+servicios/_ServicioBodegaPrxI.java
+ servicios._ServicioBodegaPrxI
+guiInventario/ControladorInventario.java
+ guiInventario.ControladorInventario
+ guiInventario.ControladorInventario$1
+ guiInventario.ControladorInventario$2
+bodega/Bodega.java
+ bodega.Bodega
+servicios/AlarmaService.java
+ servicios.AlarmaService
+ servicios.AlarmaService$1
+guiInventario/Interfaz.java
+ guiInventario.Interfaz
+servicios/StringSeqHelper.java
+ servicios.StringSeqHelper
+servicios/VentaServicePrx.java
+ servicios.VentaServicePrx
+servicios/RecursoAbastecimiento.java
+ servicios.RecursoAbastecimiento
+bodega/InventarioRepositorio.java
+ bodega.InventarioRepositorio
+servicios/ServicioAbastecimiento.java
+ servicios.ServicioAbastecimiento
+ servicios.ServicioAbastecimiento$1
+servicios/MapStrIntHelper.java
+ servicios.MapStrIntHelper
+servicios/ServicioComLogisticaPrx.java
+ servicios.ServicioComLogisticaPrx
