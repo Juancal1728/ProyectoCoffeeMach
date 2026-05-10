@@ -10,13 +10,21 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import logistica.LogisticaController;
+import tecnicoMantenimiento.TecnicoMantenimiento;
 
+/**
+ * Controlador MVC de la interfaz principal de cmLogistics.
+ * Gestiona eventos de sesion, alarmas e inventario.
+ * Patron: Controller (MVC) + Secure Messaging (valida autenticacion antes de operar).
+ *
+ * Usa TecnicoMantenimiento para encapsular el estado del operador autenticado.
+ * Accede a los controles de alarma via InterfazLogistica.getPanelAlarmas().
+ */
 public class ControladorLogistica implements Runnable {
 
     private LogisticaController controller;
     private InterfazLogistica interfaz;
-    private int codigoOperador;
-    private boolean autenticado;
+    private TecnicoMantenimiento tecnico;
     private List<String> alarmasActuales = new ArrayList<>();
     private Runnable onClose;
 
@@ -36,9 +44,7 @@ public class ControladorLogistica implements Runnable {
             interfaz.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             interfaz.addWindowListener(new WindowAdapter() {
                 public void windowClosed(WindowEvent e) {
-                    if (onClose != null) {
-                        onClose.run();
-                    }
+                    if (onClose != null) onClose.run();
                 }
             });
             interfaz.setVisible(true);
@@ -58,13 +64,13 @@ public class ControladorLogistica implements Runnable {
             }
         });
 
-        interfaz.getBtnConsultarAlarmas().addActionListener(new ActionListener() {
+        interfaz.getPanelAlarmas().getBtnConsultarAlarmas().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 consultarAlarmas();
             }
         });
 
-        interfaz.getBtnResolverAlarma().addActionListener(new ActionListener() {
+        interfaz.getPanelAlarmas().getBtnResolverAlarma().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resolverAlarmaSeleccionada();
             }
@@ -79,13 +85,17 @@ public class ControladorLogistica implements Runnable {
 
     private void iniciarSesion() {
         try {
-            codigoOperador = Integer.parseInt(interfaz.getTextFieldCodigoOperador().getText());
+            int codigoOperador = Integer.parseInt(
+                    interfaz.getTextFieldCodigoOperador().getText());
             String password = interfaz.getTextFieldPassword().getText();
-            autenticado = controller.iniciarSesion(codigoOperador, password);
 
-            if (autenticado) {
-                interfaz.getLblEstado().setText("Sesion iniciada para operador " + codigoOperador);
-                registrarEvento("Sesion iniciada correctamente.");
+            boolean ok = controller.iniciarSesion(codigoOperador, password);
+            tecnico = controller.getTecnicoActual();
+
+            if (tecnico.isAutenticado()) {
+                interfaz.getLblEstado().setText(
+                        "Sesion iniciada para operador " + tecnico.getCodigoOperador());
+                registrarEvento("Sesion iniciada correctamente. " + tecnico);
                 consultarAlarmas();
             } else {
                 interfaz.getLblEstado().setText("Credenciales invalidas");
@@ -101,14 +111,14 @@ public class ControladorLogistica implements Runnable {
     }
 
     private void consultarAlarmas() {
-        if (!autenticado) {
+        if (tecnico == null || !tecnico.isAutenticado()) {
             registrarEvento("Primero debe iniciar sesion.");
             return;
         }
 
         try {
-            alarmasActuales = controller.consultarAlarmas(codigoOperador);
-            interfaz.getComboBoxAlarmas().removeAllItems();
+            alarmasActuales = controller.consultarAlarmas(tecnico.getCodigoOperador());
+            interfaz.getPanelAlarmas().getComboBoxAlarmas().removeAllItems();
 
             if (alarmasActuales == null || alarmasActuales.isEmpty()) {
                 registrarEvento("No hay alarmas pendientes.");
@@ -116,7 +126,7 @@ public class ControladorLogistica implements Runnable {
             }
 
             for (String alarma : alarmasActuales) {
-                interfaz.getComboBoxAlarmas().addItem(formatearAlarma(alarma));
+                interfaz.getPanelAlarmas().getComboBoxAlarmas().addItem(formatearAlarma(alarma));
             }
 
             registrarEvento("Alarmas pendientes actualizadas: " + alarmasActuales.size());
@@ -126,12 +136,12 @@ public class ControladorLogistica implements Runnable {
     }
 
     private void resolverAlarmaSeleccionada() {
-        if (!autenticado) {
+        if (tecnico == null || !tecnico.isAutenticado()) {
             registrarEvento("Primero debe iniciar sesion.");
             return;
         }
 
-        int index = interfaz.getComboBoxAlarmas().getSelectedIndex();
+        int index = interfaz.getPanelAlarmas().getComboBoxAlarmas().getSelectedIndex();
         if (index < 0 || index >= alarmasActuales.size()) {
             registrarEvento("Seleccione una alarma pendiente.");
             return;
@@ -176,10 +186,7 @@ public class ControladorLogistica implements Runnable {
 
     private String formatearAlarma(String alarma) {
         String[] partes = alarma.split("\\|");
-        if (partes.length < 6) {
-            return alarma;
-        }
-
+        if (partes.length < 6) return alarma;
         return "Maq " + partes[0] + " - " + partes[2] + " x" + partes[3]
                 + " - " + partes[5];
     }

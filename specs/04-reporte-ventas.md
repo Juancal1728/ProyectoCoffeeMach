@@ -1,6 +1,6 @@
 # Spec 04 — Reporte de ventas al servidor central
 
-> Post-mortem: feature completamente implementada.
+> Estado: Implementado. Ventas ahora usan clave unica con timestamp para evitar sobrescritura al vender el mismo producto varias veces.
 
 ---
 
@@ -85,8 +85,11 @@ Task 3: Registro local de ventas en coffeeMach
 Depends on: Spec 02
 What was built: En ControladorMQ.btnOrdenar, se crea una instancia Venta con
   idReceta, precio y fecha, y se agrega a VentaRepositorio.
+  Fix aplicado: la clave del HashMap usa timestamp (System.currentTimeMillis()) concatenado
+  al idReceta para evitar que dos ventas del mismo producto se sobrescriban en el repositorio.
 Acceptance criteria:
-- Tras ordenar una receta con id "3", VentaRepositorio contiene una entrada con key "3".
+- Tras ordenar la misma receta dos veces, VentaRepositorio tiene dos entradas distintas (no una).
+- El array enviado al servidor contiene una entrada por cada venta registrada.
   
 Task 4: Envío del reporte desde coffeeMach
 Depends on: Task 1, Task 3

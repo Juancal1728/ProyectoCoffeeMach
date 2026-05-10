@@ -29,13 +29,13 @@ public class AlarmasPendientesRepositorio implements Serializable {
         return instance;
     }
 
-    public void guardarAlarma(AlarmaPendiente alarma) {
+    public synchronized void guardarAlarma(AlarmaPendiente alarma) {
         String key = alarma.getIdMaquina() + "-" + alarma.getIdAlarma();
         alarmas.put(key, alarma);
         guardar();
     }
 
-    public void cerrarAlarma(int idMaquina, int idAlarma) {
+    public synchronized void cerrarAlarma(int idMaquina, int idAlarma) {
         String key = idMaquina + "-" + idAlarma;
         AlarmaPendiente alarma = alarmas.get(key);
         if (alarma != null) {
@@ -44,7 +44,7 @@ public class AlarmasPendientesRepositorio implements Serializable {
         }
     }
 
-    public List<AlarmaPendiente> listarPendientes() {
+    public synchronized List<AlarmaPendiente> listarPendientes() {
         List<AlarmaPendiente> pendientes = new ArrayList<>();
         for (AlarmaPendiente alarma : alarmas.values()) {
             if (!alarma.isResuelta()) {

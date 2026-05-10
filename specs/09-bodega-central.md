@@ -21,6 +21,7 @@
 6. `hayExistencias(recurso, cantidad)` verifica si hay stock suficiente sin modificarlo.
 7. `despachar(recurso, cantidad, codMaquina, idAlarma)` descuenta del inventario y retorna true/false.
 8. La consola local permite ver inventario y recargar recursos manualmente.
+9. Los metodos `hayExistencias()`, `despachar()`, `recargar()` y `listar()` de `InventarioRepositorio` son `synchronized` para proteger acceso concurrente de multiples llamadas Ice desde cmLogistics.
 
 **Patron aplicado:** Broker (Servant), Repository + Singleton, Controller.
 

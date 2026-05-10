@@ -1,6 +1,6 @@
 # Spec 05 — Gestión de recetas e ingredientes
 
-> Post-mortem: feature completamente implementada.
+> Estado: Implementado. definirProducto() implementado (Spec 12). Null check en consultarProductos() corregido. Retorno null cambiado a new String[0].
 
 ---
 
@@ -25,8 +25,8 @@
 - Registrar un ingrediente con nombre ya existente: se detecta el duplicado con un SELECT previo y no se inserta, retornando string vacío.
 - Registrar una receta con nombre ya existente: igual — se detecta duplicado y no se inserta.
 - Eliminar una receta con ingredientes asociados: `borrarReceta()` borra primero `RECETA_INGREDIENTE` y luego `RECETA` (evita FK violation).
-- `consultarProductos()` verifica `!listaAsociada.equals(null)` — esto es un bug: `equals(null)` sobre un objeto nunca lanza NPE pero tampoco detecta lista nula; si `listaAsociada` fuera `null` se lanzaría `NullPointerException` antes.
-- Ingrediente sin alarmas en el catálogo `ALARMA`: `validarAlarma()` retorna string vacío para `codIng` > 4.
+- `consultarProductos()` verificaba `!listaAsociada.equals(null)` — bug corregido: cambiado a `listaAsociada != null && !listaAsociada.isEmpty()`. Ademas, el retorno `null` fue cambiado a `new String[0]` para evitar NullPointerException en el cliente.
+- Ingrediente sin alarmas en el catalogo `ALARMA`: `validarAlarma()` retorna string vacio para `codIng` > 4.
 
 **Acceptance criteria:**
 - **Given** un nombre de ingrediente nuevo, **when** se llama `registrarIngrediente("Leche")`, **then** se inserta una fila en `INGREDIENTE` y dos filas en `ALARMA` (nivel bajo y crítico).
@@ -84,11 +84,13 @@ String   registrarIngrediente(String nombre)          // retorna "id-nombre-alar
 Task 1: Servant ProductoReceta (ServidorCentral)
 Depends on: none
 What was built: Clase ProductoReceta implementando RecetaService (Ice).
-  Todos los métodos abren conexión BD, crean ManejadorDatos, delegan y cierran.
-  definirProducto() lanza UnsupportedOperationException.
+  Todos los metodos abren conexion BD, crean ManejadorDatos, delegan y cierran.
+  definirProducto() implementado en Spec 12 (ya no lanza UnsupportedOperationException).
+  consultarProductos() corregido: null check y retorno new String[0] (Spec 12, Task 5).
 Acceptance criteria:
-- registrarReceta("Espresso", 1500) retorna string no vacío con el id asignado.
-- borrarReceta(id) no lanza excepción para id existente.
+- registrarReceta("Espresso", 1500) retorna string no vacio con el id asignado.
+- borrarReceta(id) no lanza excepcion para id existente.
+- consultarProductos() retorna new String[0] cuando no hay recetas (no null).
 
 Task 2: ManejadorDatos — SQL de recetas e ingredientes
 Depends on: Task 1
@@ -119,8 +121,8 @@ Acceptance criteria:
 1. **`validarAlarma()` solo mapea ingredientes con id 1–4 (Agua, Cafe, Azucar, Vaso)** — Impact: HIGH
    Correct this if: se registran nuevos ingredientes; sus alarmas no quedarán mapeadas en el formato de `consultarProductos()`.
 
-2. **`definirProducto()` no está implementado** — Impact: MEDIUM
-   Correct this if: se requiere crear un producto completo (receta + ingredientes) en una sola operación atómica.
+2. **`definirProducto()` implementado en Spec 12** — Impact: resuelto.
+   Itera el mapa de ingredientes, busca cada uno por nombre o ID via `buscarIdIngredientePorNombre()`, y registra la receta con sus ingredientes en una sola llamada.
 
 3. **No hay transacción entre la inserción en INGREDIENTE y la inserción de sus dos ALARMA** — Impact: MEDIUM
    Correct this if: se requiere que ingrediente y sus alarmas se creen juntos o ninguno.

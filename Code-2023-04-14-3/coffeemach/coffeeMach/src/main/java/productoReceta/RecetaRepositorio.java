@@ -10,7 +10,7 @@ public class RecetaRepositorio extends Repositorio<String, Receta> {
 
     private static RecetaRepositorio instance;
 
-    public static RecetaRepositorio getInstance() {
+    public static synchronized RecetaRepositorio getInstance() {
         if (instance == null) {
             instance = new RecetaRepositorio();
         }

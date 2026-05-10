@@ -1,6 +1,6 @@
 # Spec 02 — Interfaz gráfica y lógica de venta (coffeeMach)
 
-> Post-mortem: feature completamente implementada.
+> Estado: Implementado. Bug de thread-safety (frame desde hilo Ice) corregido con SwingUtilities.invokeLater. NPE en cargarRecetaMaquinas corregido.
 
 ---
 
@@ -120,8 +120,12 @@ Depends on: Task 1, Spec 05
 What was built: cargarRecetaMaquinas() llama RecetaServicePrx.consultarProductos(),
   parsea el formato delimitado y reconstruye RecetaRepositorio; actualiza combobox e
   insumos en pantalla.
+  Fix aplicado: si el servidor devuelve un ingrediente no existente en IngredienteRepositorio,
+  se crea el Ingrediente y se guarda con ingredientes.addElement(nombre, ingred).
+  Sin este fix, disminuirInsumos() lanzaba NPE al vender un producto con ese ingrediente.
 Acceptance criteria:
 - Tras presionar Actualizar, el combobox refleja exactamente los productos activos en el servidor.
+- No hay NPE al vender productos con ingredientes que no estaban en el repositorio local.
 ```
 
 ---
@@ -134,5 +138,5 @@ Acceptance criteria:
 2. **`suma` nunca acumula fracciones de centavo** — Impact: MEDIUM
    Correct this if: se introducen denominaciones distintas o precios no múltiplos de 100.
 
-3. **La GUI Swing corre enteramente en el EDT sin acceso concurrente desde el hilo Ice** — Impact: HIGH
-   Correct this if: `abastecer()` (hilo Ice) llama `frame.setEnabled()` directamente — lo cual ya ocurre en el código actual y es un bug latente de thread-safety.
+3. **La GUI Swing se actualiza desde el hilo Ice usando SwingUtilities.invokeLater** — Impact: HIGH
+   CORREGIDO: `aplicarAbastecimiento()` envuelve todas las llamadas a `frame.*` y `actualizarXxxGraf()` en `SwingUtilities.invokeLater(...)`. El hilo Ice ya no modifica el EDT directamente.

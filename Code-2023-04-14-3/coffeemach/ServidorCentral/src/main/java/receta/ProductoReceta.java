@@ -60,19 +60,15 @@ public class ProductoReceta implements RecetaService {
 
         cbd.cerrarConexion();
 
-        if (!listaAsociada.equals(null)) {
-
+        if (listaAsociada != null && !listaAsociada.isEmpty()) {
             String[] retorno = new String[listaAsociada.size()];
-
             for (int i = 0; i < listaAsociada.size(); i++) {
-
                 retorno[i] = listaAsociada.get(i);
             }
-
             return retorno;
         }
 
-        return null;
+        return new String[0];
     }
 
     /**

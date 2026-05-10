@@ -6,7 +6,7 @@ public class AlarmaRepositorio extends Repositorio<String, Alarma> {
 
     private static AlarmaRepositorio instance;
 
-    public static AlarmaRepositorio getInstance() {
+    public static synchronized AlarmaRepositorio getInstance() {
         if (instance == null) {
             instance = new AlarmaRepositorio();
         }

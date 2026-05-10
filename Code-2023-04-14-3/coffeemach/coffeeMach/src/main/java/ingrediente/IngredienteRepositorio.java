@@ -6,7 +6,7 @@ public class IngredienteRepositorio extends Repositorio<String, Ingrediente> {
 
   private static IngredienteRepositorio instance;
 
-  public static IngredienteRepositorio getInstance() {
+  public static synchronized IngredienteRepositorio getInstance() {
     if (instance == null) {
       instance = new IngredienteRepositorio();
     }

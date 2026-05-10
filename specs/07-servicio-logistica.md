@@ -1,6 +1,6 @@
 # Spec 07 — Servicio de logística para operadores
 
-> Post-mortem: Implementado completamente. Servidor completado en Spec 08 (alarmas pendientes + consultarAlarmasPendientes). Cliente completado en Spec 10 (cmLogistics).
+> Estado: Implementado completamente. `consultarAlarmasPendientes()` implementado en Spec 08. Cliente cmLogistics con GUI Swing implementado en Spec 10. `existeOperador()` y `darOperador()` convertidos a try-with-resources en Spec 12.
 
 ---
 
@@ -23,7 +23,7 @@
 - Código de operador = 0 o contraseña nula: `existeOperador()` en `ServerControl` retorna `false` sin consultar la BD.
 - Operador sin asignaciones: `listaAsignaciones()` retorna lista vacía (no `null`).
 - Operador sin alarmas activas: `asignacionMaquinasDesabastecidas()` retorna lista vacía.
-- `consultarAlarmasPendientes()` está declarado en `ServicioComLogistica.ice` pero no está implementado en `ControlComLogistica` — compilará como método sin cuerpo o lanzará error.
+- `consultarAlarmasPendientes()` IMPLEMENTADO en Spec 08: consulta `AlarmasPendientesRepositorio` y filtra por maquinas asignadas al operador (Secure Messaging).
 
 **Acceptance criteria:**
 - **Given** operador con `id=1` y `password="admin"` existen en BD, **when** se llama `inicioSesion(1, "admin")`, **then** retorna `true`.
@@ -99,21 +99,34 @@ Acceptance criteria:
 - listaAsignacionMaquinasDanadas() retorna formato "idMaquina#ubicacion#fechaIni#idAlarma#descrip".
 - existeOperador() retorna false para contraseña errónea del mismo operador.
 
-Task 4 (PENDIENTE): Cliente cmLogistics
+Task 4 (completada — Spec 10): Cliente cmLogistics con GUI Swing
 Depends on: Task 1
-What needs to be built: Implementar CmLogistics.main() para autenticar al operador,
-  consultar sus asignaciones y alarmas, y llamar abastecer() en las máquinas afectadas.
+What was built: CmLogistics.java inicializa los 3 proxies Ice y lanza ControladorLogistica
+  en el EDT via SwingUtilities.invokeLater. El cliente tiene interfaz Swing (InterfazLogistica)
+  con panel de sesion, panel de alarmas (PanelAlarmas), log de eventos e inventario.
+  TecnicoMantenimiento encapsula el estado del operador autenticado.
+  ControlAlarma encapsula la logica de consulta y resolucion de alarmas.
 Acceptance criteria:
-- Autenticación fallida muestra mensaje y no permite continuar.
-- Lista de máquinas desabastecidas se muestra al operador autenticado.
+- Login fallido muestra mensaje en lblEstado y no permite consultar alarmas.
+- Alarmas pendientes se muestran formateadas en comboBoxAlarmas.
+- Resolver alarma ejecuta el flujo completo: bodega -> callback a maquina.
 
-Task 5 (PENDIENTE): consultarAlarmasPendientes()
-Depends on: Task 1
-What needs to be built: Implementación en ControlComLogistica y ManejadorDatos para
-  retornar alarmas pendientes del operador (similar a asignacionMaquinasDesabastecidas
-  pero filtrado por tipo de alarma).
+Task 5 (completada — Spec 08): consultarAlarmasPendientes()
+Depends on: Task 1, Spec 08
+What was built: ControlComLogistica.consultarAlarmasPendientes() consulta
+  AlarmasPendientesRepositorio (repositorio local del servidor) y filtra por
+  maquinas asignadas al operador (Secure Messaging via ASIGNACION_MAQUINA).
+  Retorna lista de strings en formato pipe-delimited.
 Acceptance criteria:
-- Retorna lista no nula de alarmas activas asociadas al operador.
+- Retorna solo alarmas de maquinas asignadas al operador.
+- Retorna lista vacia (no null) si el operador no tiene alarmas pendientes.
+
+Task 6 (completada — Spec 12): try-with-resources en metodos de ManejadorDatos
+Depends on: Task 3
+What was built: existeOperador() y darOperador() convertidos a try-with-resources
+  para garantizar cierre de PreparedStatement y ResultSet ante excepciones.
+Acceptance criteria:
+- PreparedStatement se cierra correctamente incluso si executeQuery() lanza excepcion.
 ```
 
 ---
@@ -123,8 +136,8 @@ Acceptance criteria:
 1. **La contraseña se guarda en texto plano** — Impact: HIGH
    Correct this if: hay requisitos de seguridad o el sistema se expone a una red no confiable.
 
-2. **`consultarAlarmasPendientes()` no está implementado aunque está en el contrato Ice** — Impact: MEDIUM
-   Correct this if: el cliente `cmLogistics` intenta llamar ese método (producirá error en tiempo de ejecución).
+2. **`consultarAlarmasPendientes()` IMPLEMENTADO** — Impact: resuelto.
+   Implementado en Spec 08 via `AlarmasPendientesRepositorio` + filtro por asignacion de operador.
 
 3. **`cmLogistics` puede conectarse directamente a la máquina (:12346) sin pasar por el servidor** — Impact: MEDIUM
    Correct this if: se requiere que el servidor centralice y audite todas las órdenes de abastecimiento.

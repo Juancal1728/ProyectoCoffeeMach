@@ -1,6 +1,6 @@
 # Spec 06 — Abastecimiento remoto de la máquina
 
-> Post-mortem: Implementado completamente. `abastecer()` refactorizado y `abastecerRecurso()` implementado en Spec 11.
+> Estado: Implementado completamente. `abastecer()` refactorizado, `abastecerRecurso()` implementado (Spec 11), bug de alarm ID mismatch corregido con `limpiarAlarmasDeRecurso()`, actualizaciones de GUI via SwingUtilities.invokeLater.
 
 ---
 
@@ -25,8 +25,8 @@
 **Edge cases:**
 - `codMaquina` no coincide: la máquina ignora la orden completamente (sin respuesta de error).
 - `idAlarma == 1` (mantenimiento): la máquina entra al bloque pero no hace ninguna recarga (bloque vacío / TODO).
-- `abastecerRecurso()` está definido en `CoffeMach.ice` (usa el enum `RecursoAbastecimiento`) pero no implementado en `ControladorMQ` — lanzará `AbstractMethodError` o compilará como stub vacío.
-- La llamada a `frame.setEnabled(true)` ocurre en el hilo Ice (no en el EDT de Swing) — bug de thread-safety.
+- `abastecerRecurso()` IMPLEMENTADO en Spec 11. Usa `recurso.name()` para determinar el recurso y la cantidad.
+- El bug de thread-safety (`frame.setEnabled(true)` desde hilo Ice) fue CORREGIDO: todas las actualizaciones de GUI se ejecutan via `SwingUtilities.invokeLater()`.
 
 **Acceptance criteria:**
 - **Given** `codMaquina` correcto y `idAlarma = 9` (Cafe low), **when** se llama `abastecer`, **then** el ingrediente "Cafe" queda en su nivel máximo (`getMaximo()`).
@@ -86,21 +86,24 @@ Acceptance criteria:
 - idAlarma=2 fija depósito "100" a cantidad 20.
 - Tras la operación, la alarma idAlarma ya no existe en AlarmaRepositorio.
 
-Task 3 (PENDIENTE): Implementación de abastecerRecurso()
+Task 3 (completada — Spec 11): Implementacion de abastecerRecurso()
 Depends on: Task 1
-What needs to be built: Lógica para abastecer usando el enum RecursoAbastecimiento
-  y una cantidad explícita en lugar del mapeo hardcodeado de idAlarma.
+What was built: abastecerRecurso() implementado en ControladorMQ.
+  Verifica codMaquina, delega en aplicarAbastecimiento(recurso.name(), cantidad, idAlarma).
+  limpiarAlarmasDeRecurso(recurso) elimina las alarmas correctas del repositorio local
+  mapeando por nombre de recurso (no por idAlarma del servidor, que siempre era 1 para ingredientes).
+  Actualizacion de GUI via SwingUtilities.invokeLater.
 Acceptance criteria:
-- abastecerRecurso(codMaq, CAFE, 200, idAlarma) incrementa el ingrediente "Cafe" en 200.
-- Retorna true si la operación fue exitosa, false si codMaquina no coincide.
+- abastecerRecurso(codMaq, CAFE, 200, 1) recarga ingrediente "Cafe" a maximo y elimina alarmas "9" y "13".
+- Retorna true si la operacion fue exitosa, false si codMaquina no coincide.
 ```
 
 ---
 
 ## Assumptions to review
 
-1. **`abastecer()` es llamado desde el hilo Ice y modifica estado de Swing directamente** — Impact: HIGH
-   Correct this if: se quiere evitar condiciones de carrera; se debería usar `SwingUtilities.invokeLater()` para todas las llamadas a `frame.*`.
+1. **`abastecer()` y `abastecerRecurso()` son llamados desde el hilo Ice** — Impact: CORREGIDO.
+   `SwingUtilities.invokeLater()` envuelve todas las llamadas a `frame.*` y `actualizarXxxGraf()` en `aplicarAbastecimiento()`. El hilo Ice no modifica el EDT directamente.
 
 2. **La recarga de monedas siempre fija la cantidad en 20, ignorando cuánto se envió** — Impact: MEDIUM
    Correct this if: el operador puede enviar cantidades variables de monedas (en cuyo caso `abastecerRecurso` sería la API correcta).

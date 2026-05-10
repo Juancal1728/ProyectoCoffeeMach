@@ -16,7 +16,10 @@ subprojects {
     // Both Client and Server projects share the Printer.ice Slice definitions
     //
     slice {
-        iceHome = "/opt/homebrew"
+        // Configurable via -PiceHome=<path> en la linea de comandos de Gradle.
+        // Valor por defecto: /opt/homebrew (macOS Homebrew).
+        // En Linux con Ice instalado en /usr: ./gradlew build -PiceHome=/usr
+        iceHome = project.hasProperty('iceHome') ? project.iceHome : '/opt/homebrew'
         java {
             files = [file("../CoffeMach.ice")]
         }

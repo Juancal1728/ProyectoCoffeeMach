@@ -13,6 +13,7 @@ import javax.swing.JFrame;
 import java.awt.event.*;
 import interfazUsuario.Interfaz;
 import com.zeroc.Ice.Current;
+import javax.swing.SwingUtilities;
 
 import alarma.Alarma;
 import alarma.AlarmaRepositorio;
@@ -141,18 +142,60 @@ public class ControladorMQ implements Runnable, ServicioAbastecimiento {
 				return false;
 		}
 
-		quitarAlarma(idAlarma);
+		limpiarAlarmasDeRecurso(recurso);
 		respaldarMaq();
-		actualizarRecetasGraf();
-		actualizarInsumosGraf();
-		actualizarAlarmasGraf();
-
-		if (alarmas.getValues().isEmpty()) {
-			frame.setEnabled(true);
-			frame.interfazHabilitada();
-		}
+		SwingUtilities.invokeLater(() -> {
+			actualizarRecetasGraf();
+			actualizarInsumosGraf();
+			actualizarAlarmasGraf();
+			if (alarmas.getValues().isEmpty()) {
+				frame.setEnabled(true);
+				frame.interfazHabilitada();
+			}
+		});
 
 		return true;
+	}
+
+	/**
+	 * Limpia del repositorio local todas las alarmas asociadas a un recurso dado.
+	 * Usa los codAlarma propios de coffeeMach (2-15), no los IDs del servidor.
+	 * Elimina tanto el nivel bajo como el nivel crítico de cada recurso.
+	 */
+	private void limpiarAlarmasDeRecurso(String recurso) {
+		switch (recurso) {
+			case "MONEDA100":
+				alarmas.removeElement("2");
+				alarmas.removeElement("3");
+				break;
+			case "MONEDA200":
+				alarmas.removeElement("4");
+				alarmas.removeElement("5");
+				break;
+			case "MONEDA500":
+				alarmas.removeElement("6");
+				alarmas.removeElement("7");
+				break;
+			case "AGUA":
+				alarmas.removeElement("8");
+				alarmas.removeElement("12");
+				break;
+			case "CAFE":
+				alarmas.removeElement("9");
+				alarmas.removeElement("13");
+				break;
+			case "AZUCAR":
+				alarmas.removeElement("10");
+				alarmas.removeElement("14");
+				break;
+			case "VASO":
+				alarmas.removeElement("11");
+				alarmas.removeElement("15");
+				break;
+			case "KITREPARACION":
+				alarmas.removeElement("1");
+				break;
+		}
 	}
 
 	// ==================== Spec 11 - Task 3: Refactorizar abastecer() ====================
@@ -387,6 +430,7 @@ public class ControladorMQ implements Runnable, ServicioAbastecimiento {
 				Ingrediente ingred = ingredientes.findByKey(splitdeIng[1]);
 				if (ingred == null) {
 					ingred = new Ingrediente(splitdeIng[1], splitdeIng[2], 500, 50, 1000, 1000);
+					ingredientes.addElement(splitdeIng[1], ingred);
 				}
 				listaIngredientes.put(ingred, Double.parseDouble(splitdeIng[4]));
 			}

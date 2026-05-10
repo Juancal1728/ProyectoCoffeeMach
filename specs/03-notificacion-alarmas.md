@@ -1,6 +1,6 @@
 # Spec 03 — Notificación de alarmas al servidor central
 
-> Post-mortem: feature completamente implementada.
+> Estado: Implementado. Bugs criticos en ManejadorDatos.registrarAlarma() corregidos (variable incorrecta + sentencias INSERT no ejecutadas). Metodos convertidos a try-with-resources.
 
 ---
 
@@ -104,9 +104,17 @@ Depends on: Task 2
 What was built: registrarAlarma() verifica duplicado con SELECT WHERE FECHA_FINAL IS NULL,
   luego usa NEXTVAL('CONSECALARMA') e INSERT INTO ALARMA_MAQUINA.
   desactivarAlarma() actualiza FECHA_FINAL.
+Bugs corregidos (auditoria):
+  a) st.getResultSet() cambiado a sta.getResultSet() — se usaba la variable erronea
+     despues de ejecutar NEXTVAL en la sentencia sta.
+  b) psx3.executeUpdate() y psx4.executeUpdate() agregados — los dos INSERT en
+     ALARMA_MAQUINA estaban preparados pero nunca se ejecutaban (las alarmas no se guardaban).
+  c) registrarAlarma(), desactivarAlarma(), existeOperador() y darOperador() convertidos
+     a try-with-resources para garantizar cierre de PreparedStatement y ResultSet.
 Acceptance criteria:
-- Un segundo INSERT con misma alarma+máquina activa no ocurre.
+- Un segundo INSERT con misma alarma+maquina activa no ocurre.
 - CONSECUTIVO usa la secuencia de BD, no un valor manual.
+- registrarAlarma() inserta efectivamente en ALARMA_MAQUINA (ambas filas).
 
 Task 4: Generación de alarmas en ControladorMQ (coffeeMach)
 Depends on: Task 1, Spec 02

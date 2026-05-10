@@ -1,7 +1,8 @@
 package interfaz;
 
+import controlAlarma.gui.PanelAlarmas;
+
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -12,18 +13,25 @@ import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 
+/**
+ * Ventana principal de cmLogistics.
+ * Compuesta por:
+ *   - Panel de sesion (autenticacion del tecnico)
+ *   - PanelAlarmas (controlAlarma.gui) — gestion de alarmas pendientes
+ *   - Panel de eventos (log de operaciones)
+ *   - Panel de inventario (consulta a bodegaCentral)
+ */
 public class InterfazLogistica extends JFrame {
 
     private JTextField textFieldCodigoOperador;
     private JTextField textFieldPassword;
     private JButton btnIniciarSesion;
-    private JButton btnConsultarAlarmas;
-    private JButton btnResolverAlarma;
     private JButton btnConsultarInventario;
-    private JComboBox<String> comboBoxAlarmas;
     private JTextArea textAreaEventos;
     private JTextArea textAreaInventario;
     private JLabel lblEstado;
+
+    private PanelAlarmas panelAlarmas;
 
     public InterfazLogistica() {
         setTitle("CmLogistics");
@@ -41,6 +49,7 @@ public class InterfazLogistica extends JFrame {
         lblTitulo.setBounds(5, 5, 730, 20);
         contentPane.add(lblTitulo);
 
+        // --- Panel sesion ---
         JPanel panelSesion = new JPanel();
         panelSesion.setBorder(new BevelBorder(BevelBorder.LOWERED));
         panelSesion.setBounds(15, 35, 710, 70);
@@ -71,28 +80,12 @@ public class InterfazLogistica extends JFrame {
         lblEstado.setBounds(10, 42, 680, 20);
         panelSesion.add(lblEstado);
 
-        JPanel panelAlarmas = new JPanel();
-        panelAlarmas.setBorder(new BevelBorder(BevelBorder.LOWERED));
+        // --- Panel alarmas (componente reutilizable de controlAlarma.gui) ---
+        panelAlarmas = new PanelAlarmas();
         panelAlarmas.setBounds(15, 115, 710, 95);
         contentPane.add(panelAlarmas);
-        panelAlarmas.setLayout(null);
 
-        JLabel lblAlarmas = new JLabel("Alarmas pendientes:");
-        lblAlarmas.setBounds(10, 12, 150, 20);
-        panelAlarmas.add(lblAlarmas);
-
-        comboBoxAlarmas = new JComboBox<>();
-        comboBoxAlarmas.setBounds(10, 38, 530, 25);
-        panelAlarmas.add(comboBoxAlarmas);
-
-        btnConsultarAlarmas = new JButton("Consultar");
-        btnConsultarAlarmas.setBounds(555, 12, 135, 25);
-        panelAlarmas.add(btnConsultarAlarmas);
-
-        btnResolverAlarma = new JButton("Resolver");
-        btnResolverAlarma.setBounds(555, 48, 135, 25);
-        panelAlarmas.add(btnResolverAlarma);
-
+        // --- Panel eventos ---
         JPanel panelEventos = new JPanel();
         panelEventos.setBorder(new BevelBorder(BevelBorder.LOWERED));
         panelEventos.setBounds(15, 220, 350, 180);
@@ -112,6 +105,7 @@ public class InterfazLogistica extends JFrame {
         textAreaEventos.setEditable(false);
         scrollEventos.setViewportView(textAreaEventos);
 
+        // --- Panel inventario ---
         JPanel panelInventario = new JPanel();
         panelInventario.setBorder(new BevelBorder(BevelBorder.LOWERED));
         panelInventario.setBounds(375, 220, 350, 180);
@@ -139,11 +133,9 @@ public class InterfazLogistica extends JFrame {
     public JTextField getTextFieldCodigoOperador() { return textFieldCodigoOperador; }
     public JTextField getTextFieldPassword() { return textFieldPassword; }
     public JButton getBtnIniciarSesion() { return btnIniciarSesion; }
-    public JButton getBtnConsultarAlarmas() { return btnConsultarAlarmas; }
-    public JButton getBtnResolverAlarma() { return btnResolverAlarma; }
     public JButton getBtnConsultarInventario() { return btnConsultarInventario; }
-    public JComboBox<String> getComboBoxAlarmas() { return comboBoxAlarmas; }
     public JTextArea getTextAreaEventos() { return textAreaEventos; }
     public JTextArea getTextAreaInventario() { return textAreaInventario; }
     public JLabel getLblEstado() { return lblEstado; }
+    public PanelAlarmas getPanelAlarmas() { return panelAlarmas; }
 }

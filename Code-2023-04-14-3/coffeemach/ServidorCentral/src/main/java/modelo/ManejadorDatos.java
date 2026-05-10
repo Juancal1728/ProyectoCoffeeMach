@@ -22,45 +22,34 @@ public class ManejadorDatos {
 	 *           Corresponde a la alarma de una máquina en específico.
 	 */
 	public void registrarAlarma(AlarmaMaquina aM) {
-		try {
-
-			// Verificar que no exista esa alarma en el sistema
-
-			String busAlaCoincidente = "SELECT * FROM ALARMA_MAQUINA alx WHERE alx.FECHA_FINAL is null AND alx.ID_ALARMA = ? AND alx.ID_MAQUINA = ?";
-			PreparedStatement psx = conexion
-					.prepareStatement(busAlaCoincidente);
+		String busAlaCoincidente = "SELECT * FROM ALARMA_MAQUINA alx WHERE alx.FECHA_FINAL is null AND alx.ID_ALARMA = ? AND alx.ID_MAQUINA = ?";
+		try (PreparedStatement psx = conexion.prepareStatement(busAlaCoincidente)) {
 			psx.setInt(1, aM.getIdAlarma());
 			psx.setInt(2, aM.getIdMaquina());
-			ResultSet rsx = psx.executeQuery();
-
-			if (rsx.next()) {
-				System.out
-						.println("Alarma ya agregada previamente, se notificará al operador encargado");
-			} else {
-
-				Statement st = conexion.createStatement();
-				st.execute("SELECT NEXTVAL('CONSECALARMA')");
-				ResultSet rs = st.getResultSet();
-				int consecutivo = 0;
-				if (rs.next()) {
-					consecutivo = rs.getInt(1);
+			try (ResultSet rsx = psx.executeQuery()) {
+				if (rsx.next()) {
+					System.out.println("Alarma ya agregada previamente, se notificará al operador encargado");
+				} else {
+					try (Statement st = conexion.createStatement()) {
+						st.execute("SELECT NEXTVAL('CONSECALARMA')");
+						int consecutivo = 0;
+						try (ResultSet rs = st.getResultSet()) {
+							if (rs.next()) consecutivo = rs.getInt(1);
+						}
+						String insertnuevaA = "INSERT INTO ALARMA_MAQUINA (ID_ALARMA,ID_MAQUINA,FECHA_INICIAL,CONSECUTIVO) VALUES (?,?,?,?)";
+						try (PreparedStatement pst = conexion.prepareStatement(insertnuevaA)) {
+							pst.setInt(1, aM.getIdAlarma());
+							pst.setInt(2, aM.getIdMaquina());
+							pst.setDate(3, new Date(aM.getFechaInicialAlarma().getTime()));
+							pst.setInt(4, consecutivo);
+							pst.executeUpdate();
+						}
+					}
 				}
-
-				String insertnuevaA = "INSERT INTO ALARMA_MAQUINA (ID_ALARMA,ID_MAQUINA,FECHA_INICIAL,CONSECUTIVO) VALUES (?,?,?,?)";
-				PreparedStatement pst = conexion
-						.prepareStatement(insertnuevaA);
-				pst.setInt(1, aM.getIdAlarma());
-				pst.setInt(2, aM.getIdMaquina());
-				pst.setDate(3, new Date(aM.getFechaInicialAlarma().getTime()));
-				pst.setInt(4, consecutivo);
-				pst.executeUpdate();
-
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	/**
@@ -72,15 +61,11 @@ public class ManejadorDatos {
 	public void desactivarAlarma(int idMaquina, int idAlarma,
 			java.util.Date fechafinal) {
 		String updateAlarma = "UPDATE ALARMA_MAQUINA SET FECHA_FINAL = ? WHERE ID_ALARMA = ? AND ID_MAQUINA = ?";
-
-		try {
-			PreparedStatement ps = conexion.prepareStatement(updateAlarma);
+		try (PreparedStatement ps = conexion.prepareStatement(updateAlarma)) {
 			ps.setDate(1, new Date(fechafinal.getTime()));
 			ps.setInt(2, idAlarma);
 			ps.setInt(3, idMaquina);
-
 			ps.executeUpdate();
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -292,25 +277,18 @@ public class ManejadorDatos {
 	 *         máquina
 	 */
 	public String darOperador(int idMaquina) {
-
-		try {
-
-			String query = "SELECT o.NOMBRE, m.UBICACION, o.CORREO FROM OPERADORES o, MAQUINA m, ASIGNACION_MAQUINA am"
-					+ " WHERE m.IDMAQUINA = ? AND m.IDMAQUINA = am.ID_MAQUINA AND am.ID_OPERADOR = o.IDOPERADOR";
-			PreparedStatement st = conexion.prepareStatement(query);
+		String query = "SELECT o.NOMBRE, m.UBICACION, o.CORREO FROM OPERADORES o, MAQUINA m, ASIGNACION_MAQUINA am"
+				+ " WHERE m.IDMAQUINA = ? AND m.IDMAQUINA = am.ID_MAQUINA AND am.ID_OPERADOR = o.IDOPERADOR";
+		try (PreparedStatement st = conexion.prepareStatement(query)) {
 			st.setInt(1, idMaquina);
-			st.executeQuery();
-
-			ResultSet rs = st.getResultSet();
-
-			if (rs.next()) {
-				String nombre = rs.getString(1);
-				String ubicacion = rs.getString(2);
-				String correo = rs.getString(3);
-				return nombre + "-" + ubicacion + "#" + correo;
-
+			try (ResultSet rs = st.executeQuery()) {
+				if (rs.next()) {
+					String nombre = rs.getString(1);
+					String ubicacion = rs.getString(2);
+					String correo = rs.getString(3);
+					return nombre + "-" + ubicacion + "#" + correo;
+				}
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -371,16 +349,13 @@ public class ManejadorDatos {
 	 * @return
 	 */
 	public boolean existeOperador(int codigoOperador, String password) {
-		try {
-			String query = "SELECT * FROM OPERADORES o WHERE IDOPERADOR = ? AND CONTRASENA = ?";
-			PreparedStatement ps = conexion.prepareStatement(query);
+		String query = "SELECT * FROM OPERADORES o WHERE IDOPERADOR = ? AND CONTRASENA = ?";
+		try (PreparedStatement ps = conexion.prepareStatement(query)) {
 			ps.setInt(1, codigoOperador);
 			ps.setString(2, password);
-			ResultSet rs = ps.executeQuery();
-			if (rs.next()) {
-				return true;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) return true;
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -462,7 +437,7 @@ public class ManejadorDatos {
 
 				sta.execute(valorSec);
 
-				ResultSet rss2 = st.getResultSet();
+				ResultSet rss2 = sta.getResultSet();
 
 				int consec2 = 0;
 
@@ -481,6 +456,7 @@ public class ManejadorDatos {
 
 				psx3.setInt(1, consec2);
 				psx3.setString(2, "nivel bajo de " + nombre);
+				psx3.executeUpdate();
 
 				String insertAlarmaCrit = "INSERT INTO ALARMA (IDALARMA, NOMBRE) values (?,?)";
 
@@ -491,6 +467,7 @@ public class ManejadorDatos {
 
 				psx4.setInt(1, consec3);
 				psx4.setString(2, "Nivel critico de " + nombre);
+				psx4.executeUpdate();
 
 				retorno += consec2 + "-" + consec3;
 

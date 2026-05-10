@@ -20,6 +20,7 @@
 4. El formato de transporte es: `"idMaquina|idAlarma|recurso|cantidad|ubicacion|descripcion"`.
 5. Al confirmar abastecimiento, la alarma se marca como resuelta en el repositorio local y se cierra en la BD.
 6. El repositorio local usa patron Repository + Singleton standalone (no hereda de `Repositorio<K,T>` de coffeeMach ya que es otro modulo Gradle).
+7. Los metodos `guardarAlarma()`, `cerrarAlarma()` y `listarPendientes()` son `synchronized` para seguridad bajo acceso concurrente de multiples hilos Ice.
 
 **Patron aplicado:** Repository + Singleton, Broker (Servant), Secure Messaging (filtro por operador).
 
@@ -27,6 +28,7 @@
 - Alarma duplicada (mismo idMaquina + idAlarma): se sobrescribe en el HashMap.
 - Operador sin maquinas asignadas: retorna lista vacia.
 - Archivo `alarmasPendientes.bd` corrupto: se imprime error, se arranca con mapa vacio.
+- Multiples hilos Ice notificando alarmas simultaneamente: protegidos por synchronized.
 
 **Acceptance criteria:**
 - **Given** una alarma de escasez de cafe en maquina 1, **when** `Alarma.recibirNotificacionEscasezIngredientes("Cafe", 1)` se ejecuta, **then** existe una entrada en `AlarmasPendientesRepositorio` con recurso="CAFE" y cantidad=500.
@@ -63,29 +65,31 @@
 
 ---
 
-## 3. Tasks
+## 3. Tasks (completadas)
 
 ```
 Task 1: AlarmaPendiente.java
 Depends on: none
-What to build: POJO serializable con serialVersionUID, campos descriptivos y toTransportString().
+What was built: POJO serializable con serialVersionUID, campos descriptivos y toTransportString().
 Files: ServidorCentral/src/main/java/modelo/AlarmaPendiente.java
 
 Task 2: AlarmasPendientesRepositorio.java
 Depends on: Task 1
-What to build: Singleton standalone con HashMap, guardar/cargar a alarmasPendientes.bd,
+What was built: Singleton standalone con HashMap, guardar/cargar a alarmasPendientes.bd,
   metodos guardarAlarma(), cerrarAlarma(), listarPendientes().
+  Los tres metodos son synchronized para proteger acceso concurrente de multiples
+  hilos Ice que pueden notificar alarmas en paralelo.
 Files: ServidorCentral/src/main/java/modelo/AlarmasPendientesRepositorio.java
 
 Task 3: Modificar Alarma.java (servant)
 Depends on: Task 2
-What to build: Agregar registrarPendiente() y idAlarmaDesdeInsumo() como helpers.
+What was built: Agregar registrarPendiente() y idAlarmaDesdeInsumo() como helpers.
   Modificar cada metodo de notificacion para llamar registrarPendiente().
   Corregir recibirNotificacionAbastesimiento() para cerrar alarma en repositorio.
 Files: ServidorCentral/src/main/java/alarma/Alarma.java
 
 Task 4: Implementar consultarAlarmasPendientes en ControlComLogistica
 Depends on: Task 2
-What to build: Consultar asignaciones del operador, filtrar alarmas pendientes por maquinas asignadas.
+What was built: Consultar asignaciones del operador, filtrar alarmas pendientes por maquinas asignadas.
 Files: ServidorCentral/src/main/java/comunicacion/ControlComLogistica.java
 ```

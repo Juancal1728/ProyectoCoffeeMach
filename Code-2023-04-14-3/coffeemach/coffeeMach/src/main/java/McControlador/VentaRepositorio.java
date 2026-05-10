@@ -6,7 +6,7 @@ public class VentaRepositorio extends Repositorio<String, Venta> {
 
     private static VentaRepositorio instance;
 
-    public static VentaRepositorio getInstance() {
+    public static synchronized VentaRepositorio getInstance() {
         if (instance == null) {
             instance = new VentaRepositorio();
         }

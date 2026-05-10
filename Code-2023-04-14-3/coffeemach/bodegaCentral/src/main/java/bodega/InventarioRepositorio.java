@@ -43,12 +43,12 @@ public class InventarioRepositorio implements Serializable {
         guardar();
     }
 
-    public boolean hayExistencias(String recurso, int cantidad) {
+    public synchronized boolean hayExistencias(String recurso, int cantidad) {
         ItemInventario item = inventario.get(recurso);
         return item != null && item.getCantidad() >= cantidad;
     }
 
-    public boolean despachar(String recurso, int cantidad) {
+    public synchronized boolean despachar(String recurso, int cantidad) {
         ItemInventario item = inventario.get(recurso);
         if (item == null) return false;
         boolean ok = item.retirar(cantidad);
@@ -56,7 +56,7 @@ public class InventarioRepositorio implements Serializable {
         return ok;
     }
 
-    public void recargar(String recurso, int cantidad) {
+    public synchronized void recargar(String recurso, int cantidad) {
         ItemInventario item = inventario.get(recurso);
         if (item == null) {
             item = new ItemInventario(recurso, 0);
@@ -66,7 +66,7 @@ public class InventarioRepositorio implements Serializable {
         guardar();
     }
 
-    public List<String> listar() {
+    public synchronized List<String> listar() {
         List<String> datos = new ArrayList<>();
         for (ItemInventario item : inventario.values()) {
             datos.add(item.toString());

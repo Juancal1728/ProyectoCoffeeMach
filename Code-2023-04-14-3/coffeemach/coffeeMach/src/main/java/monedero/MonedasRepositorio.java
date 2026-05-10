@@ -6,7 +6,7 @@ public class MonedasRepositorio extends Repositorio<String, DepositoMonedas> {
 
     private static MonedasRepositorio instance;
 
-    public static MonedasRepositorio getInstance() {
+    public static synchronized MonedasRepositorio getInstance() {
         if (instance == null) {
             instance = new MonedasRepositorio();
         }
